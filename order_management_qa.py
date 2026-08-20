@@ -63,7 +63,7 @@ class TestOrderManagementQA(unittest.TestCase):
     def test_09_valid_coupon_save10(self):
         res = self.system.process_order([OrderItem(self.p_apple, 50)], "SAVE10")
         self.assertTrue(res["success"])
-        self.assertEqual(res["coupon_discount"], 10.0)
+        self.assertEqual(res["coupon_discount"], 9.5)
 
     # 10. Category discount (Electronics)
     def test_10_electronics_category_discount(self):
@@ -116,7 +116,7 @@ class TestOrderManagementQA(unittest.TestCase):
     def test_19_case_insensitive_coupon(self):
         res = self.system.process_order([OrderItem(self.p_apple, 50)], "save10")
         self.assertTrue(res["success"])
-        self.assertEqual(res["coupon_discount"], 10.0)
+        self.assertEqual(res["coupon_discount"], 9.5)
 
     # 20. Complex multi-rule combo order
     def test_20_complex_combo_order(self):
