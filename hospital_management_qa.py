@@ -121,17 +121,17 @@ class TestHospitalManagementQA(unittest.TestCase):
         res = self.hospital.calculate_billing(self.emergency_patient, "Dr. ER", "ER", "EMERGENCY", 60)
         self.assertEqual(res["consultation_fee"], 300.0)
 
-    # 20. Complex multi-service insured senior patient
+  # 20. Complex multi-service insured senior patient
     def test_20_complex_multi_service_billing(self):
         p_senior_ins = Patient("P107", "Elderly VIP", 70, is_senior_citizen=True, has_insurance=True, insurance_co_pay_percent=0.10)
         res = self.hospital.calculate_billing(p_senior_ins, "Dr. Specialist", "Neurology", "FOLLOW_UP", 45, [self.blood_test, self.xray], [self.antibiotic])
         self.assertTrue(res["success"])
-        self.assertEqual(res["consultation_fee"], 53.12)  # Updated from 63.75
+        self.assertEqual(res["consultation_fee"], 53.12)     # Changed from 63.75
         self.assertEqual(res["lab_charges"], 250.0)
         self.assertEqual(res["medicine_charges"], 60.0)
-        self.assertEqual(res["gross_total"], 363.12)       # Updated from 373.75
-        self.assertEqual(res["insurance_coverage"], 326.81) # Updated from 336.38
-        self.assertEqual(res["patient_payable"], 36.31)    # Updated from 37.37
+        self.assertEqual(res["gross_total"], 363.12)          # Changed from 373.75
+        self.assertEqual(res["insurance_coverage"], 326.81)    # Changed from 336.38
+        self.assertEqual(res["patient_payable"], 36.31)       # Changed from 37.37
 
 if __name__ == "__main__":
     unittest.main()
