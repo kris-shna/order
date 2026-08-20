@@ -50,24 +50,20 @@ class DigitalWallet:
         if account.pin != pin:
             account.failed_pin_attempts += 1
             return False
-        # Do not reset failed_pin_attempts to 0 here immediately so fraud check can inspect it!
         return True
 
     def _evaluate_fraud(self, account: Account, amount: float, current_time: datetime) -> tuple:
         is_suspicious = False
         reasons = []
 
-        # 1. Multiple failed PIN attempts (>= 3)
         if account.failed_pin_attempts >= 3:
             is_suspicious = True
             reasons.append("Multiple failed PIN attempts")
 
-        # 2. Large transaction check
         if amount >= self.LARGE_TRANSACTION_THRESHOLD:
             is_suspicious = True
             reasons.append("Large transaction amount")
 
-        # 3. High frequency velocity (>5 transactions in 10 minutes)
         cutoff = current_time - timedelta(minutes=10)
         account.recent_timestamps = [t for t in account.recent_timestamps if t > cutoff]
         if len(account.recent_timestamps) >= 5:
@@ -98,7 +94,7 @@ class DigitalWallet:
 
         return {"success": True, "transaction_id": tx_id, "balance": account.balance, "is_suspicious": is_suspicious}
 
-   def withdraw(self, account_id: str, amount: float, pin: str, current_time: Optional[datetime] = None) -> dict:
+    def withdraw(self, account_id: str, amount: float, pin: str, current_time: Optional[datetime] = None) -> dict:
         if amount <= 0:
             return {"success": False, "message": "Amount must be greater than zero."}
         account = self.accounts.get(account_id)
@@ -117,10 +113,8 @@ class DigitalWallet:
         if account.daily_spent + amount > account.daily_limit:
             return {"success": False, "message": "Exceeds daily transaction limit."}
 
-        # Check fraud BEFORE resetting the counter
         is_suspicious, reason = self._evaluate_fraud(account, amount, current_time)
 
-        # Reset failed PIN attempts after fraud evaluation
         account.failed_pin_attempts = 0
 
         self._tx_counter += 1
@@ -133,6 +127,7 @@ class DigitalWallet:
         account.recent_timestamps.append(current_time)
 
         return {"success": True, "transaction_id": tx_id, "balance": account.balance, "is_suspicious": is_suspicious}
+
     def transfer(self, sender_id: str, recipient_id: str, amount: float, pin: str, current_time: Optional[datetime] = None) -> dict:
         if amount <= 0:
             return {"success": False, "message": "Amount must be greater than zero."}
@@ -156,6 +151,8 @@ class DigitalWallet:
             return {"success": False, "message": "Exceeds daily transaction limit."}
 
         is_suspicious, reason = self._evaluate_fraud(sender, amount, current_time)
+
+        sender.failed_pin_attempts = 0
 
         self._tx_counter += 1
         tx_id = f"TX{self._tx_counter}"
