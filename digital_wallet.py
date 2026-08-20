@@ -50,7 +50,7 @@ class DigitalWallet:
         if account.pin != pin:
             account.failed_pin_attempts += 1
             return False
-        account.failed_pin_attempts = 0
+        # Do not reset failed_pin_attempts to 0 here immediately so fraud check can inspect it!
         return True
 
     def _evaluate_fraud(self, account: Account, amount: float, current_time: datetime) -> tuple:
@@ -98,7 +98,7 @@ class DigitalWallet:
 
         return {"success": True, "transaction_id": tx_id, "balance": account.balance, "is_suspicious": is_suspicious}
 
-    def withdraw(self, account_id: str, amount: float, pin: str, current_time: Optional[datetime] = None) -> dict:
+   def withdraw(self, account_id: str, amount: float, pin: str, current_time: Optional[datetime] = None) -> dict:
         if amount <= 0:
             return {"success": False, "message": "Amount must be greater than zero."}
         account = self.accounts.get(account_id)
@@ -117,7 +117,11 @@ class DigitalWallet:
         if account.daily_spent + amount > account.daily_limit:
             return {"success": False, "message": "Exceeds daily transaction limit."}
 
+        # Check fraud BEFORE resetting the counter
         is_suspicious, reason = self._evaluate_fraud(account, amount, current_time)
+
+        # Reset failed PIN attempts after fraud evaluation
+        account.failed_pin_attempts = 0
 
         self._tx_counter += 1
         tx_id = f"TX{self._tx_counter}"
@@ -129,7 +133,6 @@ class DigitalWallet:
         account.recent_timestamps.append(current_time)
 
         return {"success": True, "transaction_id": tx_id, "balance": account.balance, "is_suspicious": is_suspicious}
-
     def transfer(self, sender_id: str, recipient_id: str, amount: float, pin: str, current_time: Optional[datetime] = None) -> dict:
         if amount <= 0:
             return {"success": False, "message": "Amount must be greater than zero."}
